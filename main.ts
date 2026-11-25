@@ -11,13 +11,13 @@
 //     takes the earliest slot it can and lets the exit rules sort
 //     winners from losers. Never chase a coin already up 60% and
 //     never buy one near completing its curve.
-//   * Sell on a trailing stop once a trade is in profit (armed at +8%,
-//     exit on a 10% pullback from the peak, with a +100% safety cap), a
-//     tight stop-loss at -5%, or a stale exit that frees the slot when a
-//     coin goes nowhere. Letting winners run is what pays for the many
-//     small losers: capping gains low would cap the upside that funds
-//     the whole book. Every exit is a full sell, so each coin is at most
-//     one round trip and the per-trade outcome stays bounded.
+//   * Sell on a trailing stop once a trade is in profit (armed at +15%,
+//     exit on a 15% pullback from the peak, with a +200% safety cap), a
+//     wide stop-loss at -15%, or a stale exit that frees the slot when a
+//     coin goes nowhere for a long while. Holding longer lets winners
+//     run toward completion — the gains that fund the book — while the
+//     exits cut the worst losers. Every exit is a full sell, so each coin
+//     is at most one round trip and the per-trade outcome stays bounded.
 //   * At most 5 open positions (the harness cap), so variance stays low
 //     and the bot keeps turning coins over to clear the 20-round-trip
 //     minimum with room to spare.
@@ -29,8 +29,8 @@
 //
 // Fees shape the sizes: a buy and a sell together cost about 2.5% of the
 // stake in curve fees plus two transaction fees, so the stake (0.04 SOL),
-// the buy-early entry and the exits (trailing stop armed at +8%,
-// stop-loss at -5%) are chosen so a winning round trip clears its costs
+// the buy-early entry and the exits (trailing stop armed at +15%,
+// stop-loss at -15%) are chosen so a winning round trip clears its costs
 // several times over while a losing one stays small.
 
 import {
@@ -60,17 +60,17 @@ const MAX_CHASE = 0.60;
 /** Never buy a coin whose real SOL reserve is already this large. */
 const MAX_REAL_SOL_LAMPORTS = 30n * LAMPORTS_PER_SOL;
 /** Take profit: a high safety cap; the trailing stop does the real work. */
-const TAKE_PROFIT = 1.0;
+const TAKE_PROFIT = 2.0;
 /** Stop loss: sell when the price is down this much on entry. */
-const STOP_LOSS = 0.05;
+const STOP_LOSS = 0.15;
 /** Arm the trailing stop once the price is up this much on entry. */
-const TRAIL_ARM = 0.08;
+const TRAIL_ARM = 0.15;
 /** ...then sell when the price falls this much from its peak. */
-const TRAIL_DROP = 0.10;
+const TRAIL_DROP = 0.15;
 /** Stale exit: after this many slots, leave if barely above entry. */
-const STALE_SLOTS = 1800;
+const STALE_SLOTS = 3600;
 /** ...the price must be at least this far above entry to keep holding. */
-const STALE_KEEP = 0.01;
+const STALE_KEEP = 0.05;
 /** Slippage allowance on buys and sells (10%). */
 const MAX_SLIPPAGE_BPS = 1000;
 
