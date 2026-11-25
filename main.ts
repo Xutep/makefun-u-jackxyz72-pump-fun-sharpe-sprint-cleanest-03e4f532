@@ -58,7 +58,7 @@ const MIN_CAP_LAMPORTS = (LAMPORTS_PER_SOL * 2n) / 100n;
 /** Trades a coin must have printed before it can be bought. */
 const MIN_TRADES_TO_BUY = 4;
 /** Buy only if the price is up at least this much since first seen. */
-const MIN_MOMENTUM = 0.25;
+const MIN_MOMENTUM = 0.20;
 /** Never chase a coin already up more than this since first seen. */
 const MAX_CHASE = 0.60;
 /** Never buy a coin whose real SOL reserve is already this large. */
@@ -127,7 +127,7 @@ interface CoinWatch {
 /** Batches kept in the per-coin trade-flow window. */
 const FLOW_WINDOW = 5;
 /** Buy only when buys are at least this share of recent trade flow. */
-const MIN_BUY_SHARE = 0.85;
+const MIN_BUY_SHARE = 0.8;
 /** Buy only when the price is still within this of its high since seen. */
 const MAX_PULLBACK_FROM_HIGH = 0.03;
 
