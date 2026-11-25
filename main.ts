@@ -58,7 +58,7 @@ const MIN_CAP_LAMPORTS = (LAMPORTS_PER_SOL * 2n) / 100n;
 /** Trades a coin must have printed before it can be bought. */
 const MIN_TRADES_TO_BUY = 4;
 /** Buy only if the price is up at least this much since first seen. */
-const MIN_MOMENTUM = 0.12;
+const MIN_MOMENTUM = 0.15;
 /** Never chase a coin already up more than this since first seen. */
 const MAX_CHASE = 0.60;
 /** Never buy a coin whose real SOL reserve is already this large. */
@@ -66,9 +66,9 @@ const MAX_REAL_SOL_LAMPORTS = 30n * LAMPORTS_PER_SOL;
 /** Take profit: a high safety cap; the trailing stop does the real work. */
 const TAKE_PROFIT = 0.50;
 /** Stop loss: sell when the price is down this much on entry. */
-const STOP_LOSS = 0.06;
+const STOP_LOSS = 0.05;
 /** Arm the trailing stop once the price is up this much on entry. */
-const TRAIL_ARM = 0.10;
+const TRAIL_ARM = 0.08;
 /** ...then sell when the price falls this much from its peak. */
 const TRAIL_DROP = 0.07;
 /** Stale exit: after this many slots, leave if barely above entry. */
@@ -127,7 +127,7 @@ interface CoinWatch {
 /** Batches kept in the per-coin trade-flow window. */
 const FLOW_WINDOW = 5;
 /** Buy only when buys are at least this share of recent trade flow. */
-const MIN_BUY_SHARE = 0.7;
+const MIN_BUY_SHARE = 0.75;
 /** Buy only when the price is still within this of its high since seen. */
 const MAX_PULLBACK_FROM_HIGH = 0.03;
 
