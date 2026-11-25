@@ -49,8 +49,8 @@ import {
 
 // ------------------------------------------------------------------ tuning
 
-/** SOL spent on each buy (0.04 SOL). */
-const STAKE_LAMPORTS = (LAMPORTS_PER_SOL * 4n) / 100n;
+/** SOL spent on each buy (0.08 SOL). */
+const STAKE_LAMPORTS = (LAMPORTS_PER_SOL * 8n) / 100n;
 /** Smallest buy worth placing: the round-trip minimum is 0.01 SOL. */
 const MIN_BUY_LAMPORTS = LAMPORTS_PER_SOL / 100n;
 /** Only buy while the size cap lets us place at least this much. */
