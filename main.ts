@@ -4,13 +4,16 @@
 // moonshot. So this bot scalps many small, similar-sized round trips on
 // freshly created pump.fun coins and exits fast, with tight rules:
 //
-//   * Buy only a coin that is brand new, already shows early buying
-//     momentum (price up a few percent since its CreateEvent, on real
-//     trades), has not already run far, and is nowhere near completing
-//     its curve. One small fixed stake per coin, never averaging down.
-//   * Sell on a trailing stop once a trade is in profit (armed at +10%,
-//     exit on a 10% pullback from the peak, with a +50% safety cap), a
-//     tight stop-loss at -6%, or a stale exit that frees the slot when a
+//   * Buy early, buy small: one fixed 0.04 SOL stake per coin, as soon
+//     as its size cap allows a meaningful buy, before the crowd has
+//     run the price up. Waiting for momentum means buying the top:
+//     on these curves the first buyers get the run-up, so the bot
+//     takes the earliest slot it can and lets the exit rules sort
+//     winners from losers. Never chase a coin already up 60% and
+//     never buy one near completing its curve.
+//   * Sell on a trailing stop once a trade is in profit (armed at +8%,
+//     exit on a 10% pullback from the peak, with a +100% safety cap), a
+//     tight stop-loss at -5%, or a stale exit that frees the slot when a
 //     coin goes nowhere. Letting winners run is what pays for the many
 //     small losers: capping gains low would cap the upside that funds
 //     the whole book. Every exit is a full sell, so each coin is at most
@@ -26,9 +29,9 @@
 //
 // Fees shape the sizes: a buy and a sell together cost about 2.5% of the
 // stake in curve fees plus two transaction fees, so the stake (0.04 SOL),
-// the +8% momentum entry filter and the exits (trailing stop armed at
-// +10%, stop-loss at -6%) are chosen so a winning round trip clears its
-// costs several times over while a losing one stays small.
+// the buy-early entry and the exits (trailing stop armed at +8%,
+// stop-loss at -5%) are chosen so a winning round trip clears its costs
+// several times over while a losing one stays small.
 
 import {
   LAMPORTS_PER_SOL,
@@ -49,19 +52,19 @@ const MIN_BUY_LAMPORTS = LAMPORTS_PER_SOL / 100n;
 /** Only buy while the size cap lets us place at least this much. */
 const MIN_CAP_LAMPORTS = (LAMPORTS_PER_SOL * 2n) / 100n;
 /** Trades a coin must have printed before it can be bought. */
-const MIN_TRADES_TO_BUY = 4;
+const MIN_TRADES_TO_BUY = 1;
 /** Buy only if the price is up at least this much since first seen. */
-const MIN_MOMENTUM = 0.08;
+const MIN_MOMENTUM = 0;
 /** Never chase a coin already up more than this since first seen. */
 const MAX_CHASE = 0.60;
 /** Never buy a coin whose real SOL reserve is already this large. */
 const MAX_REAL_SOL_LAMPORTS = 30n * LAMPORTS_PER_SOL;
 /** Take profit: a high safety cap; the trailing stop does the real work. */
-const TAKE_PROFIT = 0.50;
+const TAKE_PROFIT = 1.0;
 /** Stop loss: sell when the price is down this much on entry. */
-const STOP_LOSS = 0.06;
+const STOP_LOSS = 0.05;
 /** Arm the trailing stop once the price is up this much on entry. */
-const TRAIL_ARM = 0.10;
+const TRAIL_ARM = 0.08;
 /** ...then sell when the price falls this much from its peak. */
 const TRAIL_DROP = 0.10;
 /** Stale exit: after this many slots, leave if barely above entry. */
