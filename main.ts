@@ -10,8 +10,11 @@
 //     not already run far (≤60%), and that are nowhere near completing
 //     their curve. Buying the earliest slot means buying before any
 //     signal exists, and buying after a big run means buying the top;
-//     the momentum window in between is where the edge lives. One buy
-//     per coin, never averaging down.
+//     the momentum window in between is where the edge lives. Two more
+//     filters keep the bot out of dumps already underway: the price
+//     must still sit near its high since creation, and the last few
+//     batches of trade flow must be mostly buys. One buy per coin,
+//     never averaging down.
 //   * Sell on a trailing stop once a trade is in profit (armed at +10%,
 //     exit on a 10% pullback from the peak, with a +50% safety cap), a
 //     tight stop-loss at -6%, or a stale exit that frees the slot when a
@@ -103,6 +106,12 @@ interface CoinWatch {
   firstPrice: number;
   /** Trades seen when the coin was first seen. */
   firstTrades: number;
+  /** Highest price seen since the coin was first seen. */
+  highPrice: number;
+  /** Buy SOL per recent batch (rolling window, newest last). */
+  buyFlow: number[];
+  /** Sell SOL per recent batch (rolling window, newest last). */
+  sellFlow: number[];
   /** Price at the moment our buy filled. */
   entryPrice: number;
   /** Highest price seen since the buy filled. */
@@ -114,6 +123,13 @@ interface CoinWatch {
   /** True once a sell has been sent for this coin. */
   selling: boolean;
 }
+
+/** Batches kept in the per-coin trade-flow window. */
+const FLOW_WINDOW = 5;
+/** Buy only when buys are at least this share of recent trade flow. */
+const MIN_BUY_SHARE = 0.6;
+/** Buy only when the price is still within this of its high since seen. */
+const MAX_PULLBACK_FROM_HIGH = 0.03;
 
 const watched = new Map<string, CoinWatch>();
 
@@ -134,6 +150,9 @@ await runBot({
           watched.set(e.mint, {
             firstPrice: 0,
             firstTrades: 0,
+            highPrice: 0,
+            buyFlow: [],
+            sellFlow: [],
             entryPrice: 0,
             peakPrice: 0,
             entrySlot: 0,
@@ -145,6 +164,27 @@ await runBot({
         // The harness closes the position itself; forget the coin.
         watched.delete(e.mint);
       }
+    }
+
+    // Roll this batch's trade flow into each coin's window, and track
+    // each coin's high since first seen. A coin whose recent flow is
+    // mostly sells, or whose price has already pulled back from its
+    // high, is a dump in progress, not momentum worth buying.
+    const flowBuy = new Map<string, number>();
+    const flowSell = new Map<string, number>();
+    for (const e of batch.events) {
+      if (e.event !== 'TradeEvent') continue;
+      const sol = Number(e.sol_amount) / 1e9;
+      if (e.is_buy) flowBuy.set(e.mint, (flowBuy.get(e.mint) ?? 0) + sol);
+      else flowSell.set(e.mint, (flowSell.get(e.mint) ?? 0) + sol);
+    }
+    for (const [mint, w] of watched) {
+      w.buyFlow.push(flowBuy.get(mint) ?? 0);
+      w.sellFlow.push(flowSell.get(mint) ?? 0);
+      if (w.buyFlow.length > FLOW_WINDOW) w.buyFlow.shift();
+      if (w.sellFlow.length > FLOW_WINDOW) w.sellFlow.shift();
+      const p = priceOf(state, mint);
+      if (p > 0 && p > w.highPrice) w.highPrice = p;
     }
 
     // Seed firstPrice on the first batch where a price is observable.
@@ -210,6 +250,13 @@ await runBot({
       if (price <= 0 || w.firstPrice <= 0) continue;
       const move = price / w.firstPrice - 1;
       if (move < MIN_MOMENTUM || move > MAX_CHASE) continue;
+      // Still near its high: the rise is live, not already reversing.
+      if (w.highPrice > 0 && price < w.highPrice * (1 - MAX_PULLBACK_FROM_HIGH)) continue;
+      // Recent flow must be mostly buys: sellers in control means the
+      // momentum already turned.
+      const buyVol = w.buyFlow.reduce((a, b) => a + b, 0);
+      const sellVol = w.sellFlow.reduce((a, b) => a + b, 0);
+      if (buyVol + sellVol <= 0 || buyVol / (buyVol + sellVol) < MIN_BUY_SHARE) continue;
       const cap = state.maxBuyLamports(mint);
       if (cap < MIN_CAP_LAMPORTS) continue;
       const amount = cap < STAKE_LAMPORTS ? cap : STAKE_LAMPORTS;
