@@ -5,19 +5,19 @@
 // freshly created pump.fun coins and exits fast, with tight rules:
 //
 //   * Buy small, buy momentum: one fixed 0.04 SOL stake per coin, only
-//     on coins just created that already show early buying momentum
-//     (price up at least 8% since creation on real trades), that have
-//     not already run far (≤60%), and that are nowhere near completing
-//     their curve. Buying the earliest slot means buying before any
-//     signal exists, and buying after a big run means buying the top;
-//     the momentum window in between is where the edge lives. Two more
-//     filters keep the bot out of dumps already underway: the price
-//     must still sit near its high since creation, and the last few
-//     batches of trade flow must be mostly buys. One buy per coin,
-//     never averaging down.
-//   * Sell on a trailing stop once a trade is in profit (armed at +10%,
-//     exit on a 10% pullback from the peak, with a +50% safety cap), a
-//     tight stop-loss at -6%, or a stale exit that frees the slot when a
+//     on coins just created that already show strong early buying
+//     momentum (price up at least 20% since creation on real trades),
+//     that have not already run far (≤60%), and that are nowhere near
+//     completing their curve. Buying the earliest slot means buying
+//     before any signal exists, and buying after a big run means buying
+//     the top; the momentum window in between is where the edge lives.
+//     Two more filters keep the bot out of dumps already underway: the
+//     price must still sit near its high since creation, and the last
+//     few batches of trade flow must be at least 80% buys. One buy per
+//     coin, never averaging down.
+//   * Sell on a trailing stop once a trade is in profit (armed at +6%,
+//     exit on a 6% pullback from the peak, with a +50% safety cap), a
+//     tight stop-loss at -4%, or a stale exit that frees the slot when a
 //     coin goes nowhere. Letting winners run is what pays for the many
 //     small losers: capping gains low would cap the upside that funds
 //     the whole book. Every exit is a full sell, so each coin is at most
@@ -33,8 +33,8 @@
 //
 // Fees shape the sizes: a buy and a sell together cost about 2.5% of the
 // stake in curve fees plus two transaction fees, so the stake (0.04 SOL),
-// the +8% momentum entry filter and the exits (trailing stop armed at
-// +10%, stop-loss at -6%) are chosen so a winning round trip clears its
+// the +20% momentum entry filter and the exits (trailing stop armed at
+// +6%, stop-loss at -4%) are chosen so a winning round trip clears its
 // costs several times over while a losing one stays small.
 
 import {
